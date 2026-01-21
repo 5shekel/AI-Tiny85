@@ -1,11 +1,13 @@
 ---
 name: tinyaudioboot
-description: TinyAudioBoot firmware upload workflow using WAV audio files instead of traditional ISP programming. Covers hex2wav conversion, PlatformIO integration, and troubleshooting.
+description: TinyAudioBoot firmware upload workflow using WAV audio files instead of traditional ISP programming. Covers hex2wav conversion and audio upload troubleshooting.
 ---
 
 # TinyAudioBoot Firmware Upload
 
 This skill teaches you how to upload firmware to ATtiny85 using the TinyAudioBoot bootloader, which uses audio signals (WAV files) instead of traditional USB/ISP programming.
+
+> **Note**: For PlatformIO CLI issues (e.g., `pio` not found), see the [`platformio`](../platformio/SKILL.md) skill.
 
 ## How It Works
 
@@ -18,54 +20,36 @@ This skill teaches you how to upload firmware to ATtiny85 using the TinyAudioBoo
       compile          converter            (speakers)          decodes
 ```
 
-## Build Process
+## Build Commands
 
-### Standard Build (Generates WAV)
 ```bash
-pio run
-# Output:
-# .pio/build/attiny85/firmware.hex  (Intel HEX file)
-# .pio/build/attiny85/firmware.wav  (Audio upload file)
+pio run                    # Build + auto-generate WAV
+pio run --target upload    # Build and play WAV (requires audio hardware)
+pio run --target clean     # Clean build
 ```
 
-### Build and Play (Requires Audio Hardware)
-```bash
-pio run --target upload
-# Builds, converts to WAV, and plays via audio system
-```
+## hex2wav Configuration
 
-### Clean Build
-```bash
-pio run --target clean
-```
+### Auto-Detection (Recommended)
 
-## PlatformIO Configuration
-
-### [`platformio.ini`](../../../platformio.ini) Key Settings
-
+Set in [`platformio.ini`](../../../platformio.ini):
 ```ini
-[env:attiny85]
-platform = atmelavr
-board = attiny85
-framework = arduino
-board_build.f_cpu = 16000000L
-
-; Post-build script for hex2wav conversion
-extra_scripts = scripts/hex2wav_post.py
-
-; hex2wav command (OS-specific)
-custom_hex2wav_cmd = tools/hex2wav/linux/hex2wav64_bin {hex} {wav}
-
-; Auto-play after build
-custom_hex2wav_auto_play = yes
-custom_hex2wav_player_cmd = aplay -q {wav}
-
-; Custom upload protocol
-upload_protocol = custom
-upload_command = tools/hex2wav/linux/hex2wav64_bin $SOURCE .pio/build/${PIOENV}/${PROGNAME}.wav && aplay -q .pio/build/${PIOENV}/${PROGNAME}.wav
+custom_hex2wav_cmd = auto
+custom_hex2wav_auto_play = no
 ```
 
-### OS-Specific hex2wav Commands
+The post-build script auto-detects OS and selects the correct hex2wav binary:
+
+| OS | Auto-Selected Binary | Auto-Selected Player |
+|----|---------------------|---------------------|
+| Windows | `tools/hex2wav/windows/hex2wav.exe` | `start /wait {wav}` |
+| macOS | `tools/hex2wav/macosx/hex2wav` | `afplay {wav}` |
+| Linux 64-bit | `tools/hex2wav/linux/hex2wav64_bin` | `aplay -q {wav}` |
+| Linux 32-bit | `tools/hex2wav/linux/hex2wav32_bin` | `aplay -q {wav}` |
+
+### Manual Override
+
+If auto-detection doesn't work, specify manually:
 
 | OS | Command |
 |----|---------|
@@ -74,23 +58,6 @@ upload_command = tools/hex2wav/linux/hex2wav64_bin $SOURCE .pio/build/${PIOENV}/
 | macOS | `tools/hex2wav/macosx/hex2wav {hex} {wav}` |
 | Windows | `tools/hex2wav/windows/hex2wav.exe {hex} {wav}` |
 | Java (any OS) | `java -jar tools/hex2wav/hex2wav.jar -i {hex} -o {wav}` |
-
-### OS-Specific Player Commands
-
-| OS | Command |
-|----|---------|
-| Linux (ALSA) | `aplay -q {wav}` |
-| Linux (PulseAudio) | `paplay {wav}` |
-| macOS | `afplay {wav}` |
-| Windows | `start /wait "" {wav}` |
-
-## Post-Build Script
-
-The [`scripts/hex2wav_post.py`](../../../scripts/hex2wav_post.py) script:
-1. Runs after successful compilation
-2. Invokes hex2wav converter with correct paths
-3. Optionally plays the WAV file
-4. Reports conversion status
 
 ## hex2wav Tool Locations
 
@@ -142,17 +109,18 @@ Computer Audio Out ────┬──── GND
 - **Verify HEX file**: Check `.pio/build/attiny85/firmware.hex` exists
 
 ### WAV Not Generated
+- **Use auto mode**: Set `custom_hex2wav_cmd = auto` in platformio.ini
 - **Check post-script output**: Look for errors in build log
 - **Verify hex2wav binary**: Run manually to test
-- **Check permissions**: Binary must be executable
+- **Check permissions**: Binary must be executable (Linux/macOS)
 
 ### Wrong OS Binary
+Use `custom_hex2wav_cmd = auto` to avoid OS mismatch issues. If manual mode:
 ```bash
-# Check binary architecture
+# Check binary architecture (Linux/macOS)
 file tools/hex2wav/linux/hex2wav64_bin
-# Should match your system
 
-# Make executable if needed
+# Make executable if needed (Linux/macOS)
 chmod +x tools/hex2wav/linux/hex2wav64_bin
 ```
 
@@ -174,22 +142,9 @@ chmod +x tools/hex2wav/linux/hex2wav64_bin
 
 ```bash
 # Generate WAV without playing
-# Edit platformio.ini:
+# Set in platformio.ini:
 custom_hex2wav_auto_play = no
 
 pio run
 # Then manually inspect .pio/build/attiny85/firmware.wav
-```
-
-## Custom Upload Options
-
-Using `custom_` prefix avoids PlatformIO warnings:
-
-```ini
-; Good (no warnings)
-custom_hex2wav_cmd = ...
-custom_hex2wav_auto_play = yes
-
-; Bad (triggers warnings)
-hex2wav_cmd = ...
 ```

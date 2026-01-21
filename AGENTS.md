@@ -13,9 +13,10 @@ pio run --target clean     # Clean build
 ## Non-Obvious Project Specifics
 
 - **Audio Upload**: Firmware uploads via WAV audio through TinyAudioBoot bootloader, NOT traditional ISP programming
-- **Source Selection**: Edit `build_src_filter` in [`platformio.ini`](platformio.ini:41) to switch active source file (only one .cpp active at a time)
+- **Source Selection**: Edit `build_src_filter` in [`platformio.ini`](platformio.ini:52) to switch active source file (only one .cpp active at a time)
 - **Custom Options**: Use `custom_` prefix for platformio.ini options (e.g., `custom_hex2wav_cmd`) to avoid PlatformIO warnings
-- **OS Configuration**: `custom_hex2wav_cmd` must be configured per OS (Linux/macOS/Windows variants in platformio.ini comments)
+- **OS Auto-Detection**: `custom_hex2wav_cmd = auto` auto-detects OS and selects correct hex2wav binary (Windows/macOS/Linux)
+- **PlatformIO PATH**: If `pio` not found, use full path: `C:\Users\<user>\.platformio\penv\Scripts\platformio.exe` (Windows) or `~/.platformio/penv/bin/platformio` (Linux/macOS)
 
 ## Code Patterns
 
@@ -47,3 +48,4 @@ Domain-specific expertise is available in [`.agent/skills/`](.agent/skills.md):
 - [`audio-synthesis`](.agent/skills/audio-synthesis/SKILL.md) - DSP, timer PWM, waveform generation
 - [`tinyaudioboot`](.agent/skills/tinyaudioboot/SKILL.md) - WAV-based firmware upload
 - [`hardware-interface`](.agent/skills/hardware-interface/SKILL.md) - ADC scaling, buttons, NeoPixels
+- [`platformio`](.agent/skills/platformio/SKILL.md) - Build system, PATH issues, project configuration

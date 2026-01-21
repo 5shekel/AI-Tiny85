@@ -12,6 +12,7 @@ This project uses [Anthropic's Agent Skills](https://github.com/anthropics/skill
 | **Audio Synthesis** | [`skills/audio-synthesis/`](skills/audio-synthesis/SKILL.md) | Implementing DSP, waveform generation, or timer-based audio |
 | **TinyAudioBoot** | [`skills/tinyaudioboot/`](skills/tinyaudioboot/SKILL.md) | Building, uploading, or troubleshooting firmware uploads |
 | **Hardware Interface** | [`skills/hardware-interface/`](skills/hardware-interface/SKILL.md) | Working with pots, buttons, NeoPixels, or ADC |
+| **PlatformIO** | [`skills/platformio/`](skills/platformio/SKILL.md) | Build system issues, `pio` command not found, project configuration |
 
 ## Skill Details
 
@@ -81,6 +82,25 @@ This project uses [Anthropic's Agent Skills](https://github.com/anthropics/skill
 - Adding new controls
 - Debugging hardware interactions
 - Implementing visual feedback
+
+---
+
+### platformio
+**Description**: PlatformIO CLI build system for embedded development, covering installation, PATH configuration, and cross-platform setup.
+
+**Key Topics**:
+- Finding PlatformIO executable when `pio` not in PATH
+- Windows: `C:\Users\<user>\.platformio\penv\Scripts\platformio.exe`
+- Linux/macOS: `~/.platformio/penv/bin/platformio`
+- Project configuration (`platformio.ini`)
+- Custom options with `custom_` prefix
+- Source file selection with `build_src_filter`
+
+**Trigger scenarios**:
+- `pio` command not found
+- Build system configuration
+- Setting up new development environment
+- Cross-platform build issues
 
 ## Skill Format
 

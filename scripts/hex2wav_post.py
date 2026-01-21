@@ -3,23 +3,51 @@ PlatformIO post-build hook to convert firmware.hex -> firmware.wav for TinyAudio
 Place this file at: scripts/hex2wav_post.py
 
 Configure hex2wav_cmd in platformio.ini, e.g.:
-  hex2wav_cmd = /home/dusjagr/.arduino15/packages/8BitMixtape/hardware/avr/0.0.28/tools/hex2wav/linux/hex2wav {hex} {wav}
-or:
-  hex2wav_cmd = node /path/to/hex2wav.js --in {hex} --out {wav}
-  hex2wav_cmd = python3 /path/to/hex2wav.py -i {hex} -o {wav}
-  hex2wav_cmd = java -jar /path/to/TinyAudioBoot.jar -i {hex} -o {wav}
+  custom_hex2wav_cmd = auto  ; auto-detect OS and use bundled hex2wav
+  custom_hex2wav_cmd = tools/hex2wav/linux/hex2wav64_bin {hex} {wav}
+  custom_hex2wav_cmd = tools/hex2wav/windows/hex2wav.exe {hex} {wav}
+  custom_hex2wav_cmd = tools/hex2wav/macosx/hex2wav {hex} {wav}
+  custom_hex2wav_cmd = java -jar tools/hex2wav/hex2wav.jar -i {hex} -o {wav}
 """
 
 import os
+import platform
 import shlex
 import subprocess
+import sys
 from SCons.Script import Import
 
 Import("env")  # provided by PlatformIO
 
+# Project root (where platformio.ini lives)
+PROJECT_DIR = env.subst("$PROJECT_DIR")
+
 
 def _log(msg: str) -> None:
     print("[hex2wav] " + msg)
+
+
+def _get_auto_hex2wav_config():
+    """Auto-detect OS and return (hex2wav_cmd_template, player_cmd_template)."""
+    system = platform.system().lower()
+    machine = platform.machine().lower()
+    
+    if system == "windows":
+        hex2wav = "tools/hex2wav/windows/hex2wav.exe {hex} {wav}"
+        player = "start /wait {wav}"
+    elif system == "darwin":  # macOS
+        hex2wav = "tools/hex2wav/macosx/hex2wav {hex} {wav}"
+        player = "afplay {wav}"
+    else:  # Linux and others
+        # Detect 32-bit vs 64-bit
+        if "64" in machine or machine in ("x86_64", "amd64", "aarch64"):
+            hex2wav = "tools/hex2wav/linux/hex2wav64_bin {hex} {wav}"
+        else:
+            hex2wav = "tools/hex2wav/linux/hex2wav32_bin {hex} {wav}"
+        player = "aplay -q {wav}"
+    
+    _log(f"Auto-detected OS: {system} ({machine}) -> {hex2wav.split()[0]}")
+    return hex2wav, player
 
 
 def _run_cmd(cmd_list, cwd=None) -> int:
@@ -50,25 +78,30 @@ def post_action_hex_to_wav(target, source, env):
 
     # Read options from platformio.ini (prefer custom_ names to avoid warnings, fallback to legacy)
     def _getopt(name, default):
-        v = env.GetProjectOption(f"custom_{name}")
+        # Try custom_ prefixed option first, then legacy name
+        v = env.GetProjectOption(f"custom_{name}", default=None)
         if v is None:
-            v = env.GetProjectOption(name, default)
+            v = env.GetProjectOption(name, default=default)
         return v
 
     hex2wav_cmd = (_getopt("hex2wav_cmd", "") or "").strip()
     auto_play_opt = (_getopt("hex2wav_auto_play", "no") or "no").strip().lower()
     auto_play = auto_play_opt in ("1", "yes", "true", "on")
-    player_cmd = _getopt("hex2wav_player_cmd", "aplay -q {wav}")
+    player_cmd = (_getopt("hex2wav_player_cmd", "") or "").strip()
 
-    if not hex2wav_cmd:
-        _log("No 'hex2wav_cmd' configured in platformio.ini -> skipping WAV generation.")
-        _log(f"HEX: {hex_path}")
-        _log("Set e.g.: hex2wav_cmd = /path/to/hex2wav {hex} {wav}")
-        return
+    # Auto-detect hex2wav binary and player if "auto" or not specified
+    if not hex2wav_cmd or hex2wav_cmd.lower() == "auto":
+        hex2wav_cmd, auto_player = _get_auto_hex2wav_config()
+        if not player_cmd:
+            player_cmd = auto_player
+    elif not player_cmd:
+        # Default player based on OS
+        _, player_cmd = _get_auto_hex2wav_config()
 
     # Expand placeholders and split to argv safely
+    # Use posix=False on Windows to preserve backslash paths
     fmt_cmd = hex2wav_cmd.format(hex=hex_path, wav=wav_path)
-    cmd_list = shlex.split(fmt_cmd)
+    cmd_list = shlex.split(fmt_cmd, posix=(sys.platform != 'win32'))
 
     rc = _run_cmd(cmd_list)
     if rc != 0 or not os.path.exists(wav_path):
@@ -79,7 +112,7 @@ def post_action_hex_to_wav(target, source, env):
 
     if auto_play:
         fmt_player = player_cmd.format(hex=hex_path, wav=wav_path)
-        play_list = shlex.split(fmt_player)
+        play_list = shlex.split(fmt_player, posix=(sys.platform != 'win32'))
         _log("Auto-playing WAV...")
         _run_cmd(play_list)
 
@@ -98,18 +131,28 @@ def run_hex2wav_alias(target, source, env):
     hex_path = env.subst("$BUILD_DIR/${PROGNAME}.hex")
     wav_path = env.subst("$BUILD_DIR/${PROGNAME}.wav")
 
-    # Read options from platformio.ini
-    hex2wav_cmd = env.GetProjectOption("hex2wav_cmd", default="").strip()
-    auto_play = env.GetProjectOption("hex2wav_auto_play", default="no").strip().lower() in ("1", "yes", "true", "on")
-    player_cmd = env.GetProjectOption("hex2wav_player_cmd", default="aplay -q {wav}")
+    # Read options from platformio.ini (prefer custom_ prefixed options)
+    def _getopt(name, default):
+        # Try custom_ prefixed option first, then legacy name
+        v = env.GetProjectOption(f"custom_{name}", default=None)
+        if v is None:
+            v = env.GetProjectOption(name, default=default)
+        return v
 
-    if not hex2wav_cmd:
-        _log("No 'hex2wav_cmd' configured in platformio.ini -> skipping WAV generation.")
-        _log(f"HEX: {hex_path}")
-        return 0
+    hex2wav_cmd = (_getopt("hex2wav_cmd", "") or "").strip()
+    auto_play = (_getopt("hex2wav_auto_play", "no") or "no").strip().lower() in ("1", "yes", "true", "on")
+    player_cmd = (_getopt("hex2wav_player_cmd", "") or "").strip()
+
+    # Auto-detect hex2wav binary and player if "auto" or not specified
+    if not hex2wav_cmd or hex2wav_cmd.lower() == "auto":
+        hex2wav_cmd, auto_player = _get_auto_hex2wav_config()
+        if not player_cmd:
+            player_cmd = auto_player
+    elif not player_cmd:
+        _, player_cmd = _get_auto_hex2wav_config()
 
     fmt_cmd = hex2wav_cmd.format(hex=hex_path, wav=wav_path)
-    cmd_list = shlex.split(fmt_cmd)
+    cmd_list = shlex.split(fmt_cmd, posix=(sys.platform != 'win32'))
     _log("[alias] Running: " + " ".join(cmd_list))
     rc = _run_cmd(cmd_list)
     if rc != 0:
@@ -118,7 +161,7 @@ def run_hex2wav_alias(target, source, env):
 
     if auto_play:
         fmt_player = player_cmd.format(hex=hex_path, wav=wav_path)
-        play_list = shlex.split(fmt_player)
+        play_list = shlex.split(fmt_player, posix=(sys.platform != 'win32'))
         _log("[alias] Auto-playing WAV...")
         _run_cmd(play_list)
     return 0
