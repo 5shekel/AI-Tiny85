@@ -32,10 +32,18 @@ pio run --target clean     # Clean build
 - Direct timer register manipulation for precise audio timing
 - No dynamic allocation (8KB flash, 512B RAM constraint)
 
-## Agent Rules Standard (AGENTS.md):
+## Agent Configuration
 
 For mode-specific rules, see [`.agent/rules.md`](.agent/rules.md) which contains:
 - [`code.md`](.agent/rules/code.md) - Coding patterns and utilities
 - [`debug.md`](.agent/rules/debug.md) - Debug and troubleshooting guidance
 - [`ask.md`](.agent/rules/ask.md) - Documentation context
 - [`architect.md`](.agent/rules/architect.md) - Architecture constraints
+
+## Skills
+
+Domain-specific expertise is available in [`.agent/skills/`](.agent/skills.md):
+- [`attiny85-embedded`](.agent/skills/attiny85-embedded/SKILL.md) - Memory constraints, AVR patterns
+- [`audio-synthesis`](.agent/skills/audio-synthesis/SKILL.md) - DSP, timer PWM, waveform generation
+- [`tinyaudioboot`](.agent/skills/tinyaudioboot/SKILL.md) - WAV-based firmware upload
+- [`hardware-interface`](.agent/skills/hardware-interface/SKILL.md) - ADC scaling, buttons, NeoPixels
