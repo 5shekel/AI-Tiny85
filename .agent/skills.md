@@ -1,10 +1,8 @@
-# Skills Configuration
+# Skills
 
-This project uses [Anthropic's Agent Skills](https://github.com/anthropics/skills) format to teach Claude domain-specific expertise for ATtiny85 audio synthesizer development.
+Domain-specific expertise for ATtiny85 audio synthesizer development. Each skill contains detailed instructions in its `SKILL.md` file.
 
 ## Available Skills
-
-### Core Development Skills
 
 | Skill | Path | Use When |
 |-------|------|----------|
@@ -14,10 +12,17 @@ This project uses [Anthropic's Agent Skills](https://github.com/anthropics/skill
 | **Hardware Interface** | [`skills/hardware-interface/`](skills/hardware-interface/SKILL.md) | Working with pots, buttons, NeoPixels, or ADC |
 | **PlatformIO** | [`skills/platformio/`](skills/platformio/SKILL.md) | Build system issues, `pio` command not found, project configuration |
 
-## Skill Details
+## Usage
+
+1. **Automatic**: Skills are referenced based on task context
+2. **Explicit**: Request "use the audio-synthesis skill" for specific guidance
+3. **Combined**: Multiple skills often apply together
+
+---
 
 ### attiny85-embedded
-**Description**: ATtiny85 microcontroller development patterns, memory constraints, and AVR-specific coding practices for severely resource-constrained embedded systems.
+
+**Description**: Core ATtiny85 development patterns for memory-constrained embedded systems.
 
 **Key Topics**:
 - Memory constraints (8KB flash, 512B RAM)
@@ -34,6 +39,7 @@ This project uses [Anthropic's Agent Skills](https://github.com/anthropics/skill
 ---
 
 ### audio-synthesis
+
 **Description**: Digital audio synthesis techniques for ATtiny85 using phase accumulator synthesis, timer-based PWM output, and waveform generation within strict ISR timing constraints.
 
 **Key Topics**:
@@ -51,6 +57,7 @@ This project uses [Anthropic's Agent Skills](https://github.com/anthropics/skill
 ---
 
 ### tinyaudioboot
+
 **Description**: TinyAudioBoot firmware upload workflow using WAV audio files instead of traditional ISP programming.
 
 **Key Topics**:
@@ -69,6 +76,7 @@ This project uses [Anthropic's Agent Skills](https://github.com/anthropics/skill
 ---
 
 ### hardware-interface
+
 **Description**: Hardware interfacing patterns for ATtiny85 including ADC voltage scaling, analog button multiplexing, and NeoPixel visual feedback.
 
 **Key Topics**:
@@ -86,6 +94,7 @@ This project uses [Anthropic's Agent Skills](https://github.com/anthropics/skill
 ---
 
 ### platformio
+
 **Description**: PlatformIO CLI build system for embedded development, covering installation, PATH configuration, and cross-platform setup.
 
 **Key Topics**:
@@ -125,14 +134,7 @@ description: Brief description of what this skill does
 [Detailed instructions, examples, and guidelines]
 ```
 
-## Usage Notes
-
-1. **Automatic Loading**: Claude should reference relevant skills based on task context
-2. **Explicit Invocation**: Ask Claude to "use the audio-synthesis skill" for specific guidance
-3. **Skill Combination**: Multiple skills often apply together (e.g., attiny85-embedded + audio-synthesis)
-
 ## Related Documentation
 
-- [`AGENTS.md`](../AGENTS.md) - Top-level agent guidance
-- [`rules/`](rules/) - Mode-specific rules
-- [`workflows/`](workflows/) - Multi-step workflow definitions
+- [`AGENTS.md`](../AGENTS.md) - Project overview and build commands
+- [`rules.md`](rules.md) - Mode-specific rules

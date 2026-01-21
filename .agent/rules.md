@@ -1,41 +1,17 @@
 # Agent Rules
 
-This file provides guidance to AI agents working with code in this repository.
+Mode-specific rules for this project. See [`AGENTS.md`](../AGENTS.md) for project overview and build commands.
 
 ## Mode-Specific Rules
 
-See mode-specific rules in the `rules/` subdirectory:
-- [`rules/code.md`](rules/code.md) - Coding patterns and utilities
-- [`rules/debug.md`](rules/debug.md) - Debug and troubleshooting guidance
-- [`rules/ask.md`](rules/ask.md) - Documentation context
-- [`rules/architect.md`](rules/architect.md) - Architecture constraints
+| Mode | File | Purpose |
+|------|------|---------|
+| Code | [`rules/code.md`](rules/code.md) | Coding patterns and utilities |
+| Debug | [`rules/debug.md`](rules/debug.md) | Troubleshooting guidance |
+| Ask | [`rules/ask.md`](rules/ask.md) | Documentation context |
+| Architect | [`rules/architect.md`](rules/architect.md) | Architecture constraints |
 
-## Build Commands
+## Related
 
-```bash
-pio run                    # Build + auto-generate WAV for audio upload
-pio run --target upload    # Build and play WAV (requires audio hardware)
-pio run --target clean     # Clean build
-```
-
-## Non-Obvious Project Specifics
-
-- **Audio Upload**: Firmware uploads via WAV audio through TinyAudioBoot bootloader, NOT traditional ISP programming
-- **Source Selection**: Edit `build_src_filter` in [`platformio.ini`](../platformio.ini:41) to switch active source file (only one .cpp active at a time)
-- **Custom Options**: Use `custom_` prefix for platformio.ini options (e.g., `custom_hex2wav_cmd`) to avoid PlatformIO warnings
-- **OS Configuration**: `custom_hex2wav_cmd` must be configured per OS (Linux/macOS/Windows variants in platformio.ini comments)
-
-## Code Patterns
-
-- **Timers**: Timer1 uses 64MHz PLL for PWM audio output; Timer0 runs 10kHz synthesis interrupt
-- **ADC Scaling**: Use [`analogReadScaled()`](../src/vco_1voct.cpp:91) for potentiometers - compensates for LiPo voltage divider (Vcc=3.7V, Vdiv=2.6V)
-- **Delays**: Use [`my_delay()`](../src/vco_1voct.cpp:131) instead of delay() - uses ISR ticks since millis() unreliable with custom timers
-- **Buttons**: Single analog pin (A3) multiplexes multiple buttons via voltage divider thresholds
-- **PROGMEM**: All lookup tables (sine, note increments) stored in flash using PROGMEM + `pgm_read_*`
-
-## Code Style
-
-- AVR includes: `<avr/pgmspace.h>`, `<avr/interrupt.h>`, `<avr/power.h>`
-- `volatile` for ISR-shared variables
-- Direct timer register manipulation for precise audio timing
-- No dynamic allocation (8KB flash, 512B RAM constraint)
+- [`AGENTS.md`](../AGENTS.md) - Project overview, build commands, code patterns
+- [`skills.md`](skills.md) - Domain-specific expertise

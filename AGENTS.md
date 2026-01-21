@@ -12,11 +12,11 @@ pio run --target clean     # Clean build
 
 ## Non-Obvious Project Specifics
 
-- **Audio Upload**: Firmware uploads via WAV audio through TinyAudioBoot bootloader, NOT traditional ISP programming
+- **Audio Upload**: Firmware uploads via WAV audio through TinyAudioBoot bootloader, NOT traditional ISP programming (see [`tinyaudioboot`](.agent/skills/tinyaudioboot/SKILL.md) skill)
 - **Source Selection**: Edit `build_src_filter` in [`platformio.ini`](platformio.ini:52) to switch active source file (only one .cpp active at a time)
 - **Custom Options**: Use `custom_` prefix for platformio.ini options (e.g., `custom_hex2wav_cmd`) to avoid PlatformIO warnings
 - **OS Auto-Detection**: `custom_hex2wav_cmd = auto` auto-detects OS and selects correct hex2wav binary (Windows/macOS/Linux)
-- **PlatformIO PATH**: If `pio` not found, use full path: `C:\Users\<user>\.platformio\penv\Scripts\platformio.exe` (Windows) or `~/.platformio/penv/bin/platformio` (Linux/macOS)
+- **PlatformIO Setup**: See [`platformio`](.agent/skills/platformio/SKILL.md) skill for CLI path issues and configuration
 
 ## Code Patterns
 
