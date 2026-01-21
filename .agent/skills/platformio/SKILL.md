@@ -19,7 +19,19 @@ PlatformIO installed via VSCode extension is not automatically added to PATH. Us
 | Linux | `~/.platformio/penv/bin/platformio` |
 | macOS | `~/.platformio/penv/bin/platformio` |
 
-### Windows Examples
+### Windows Examples (PowerShell - VSCode default)
+```powershell
+# Using full path with call operator
+& "C:\Users\user\.platformio\penv\Scripts\platformio.exe" run
+
+# Using $env:USERPROFILE variable
+& "$env:USERPROFILE\.platformio\penv\Scripts\platformio.exe" run
+
+# Clean and rebuild
+& "$env:USERPROFILE\.platformio\penv\Scripts\platformio.exe" run --target clean; & "$env:USERPROFILE\.platformio\penv\Scripts\platformio.exe" run
+```
+
+### Windows Examples (CMD)
 ```cmd
 :: Using full path
 C:\Users\user\.platformio\penv\Scripts\platformio.exe run
@@ -39,7 +51,7 @@ $HOME/.platformio/penv/bin/platformio run
 
 ### Adding to PATH (Permanent Fix)
 
-**Windows (PowerShell):**
+**Windows (PowerShell - VSCode default):**
 ```powershell
 # Add to user PATH
 $env:PATH += ";$env:USERPROFILE\.platformio\penv\Scripts"
